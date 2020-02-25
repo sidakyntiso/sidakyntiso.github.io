@@ -1,0 +1,187 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+% Regression for Covariate Adjustment  
+% Sidak Yntiso sgy210@nyu.edu
+% February 17, 2020
+
+# Covariate Adjustment in sampling
+- Freedman [Adv. in Appl. Math. 40 (2008) 180-193; Ann. Appl. Stat. 2 (2008) 176-196] showed that regression can be **biased** in small samples and is **inconsistent** for an experimental parameter in the case when interactions aren't included.
+    - Unadjusted estimates also transparent and limit garden of forking paths concerns
+    - ''The reason for the breakdown is not hard to find: randomization does not justify the assumptions behind the OLS model.'' Freedman[Adv. in Appl. Math. 40 (2008) 180-193]
+
+- Lin, Winston. (2013) "Agnostic Notes on Regression Adjustments to Experimental Data: Reexamining Freedman's Critique" *Annals of Applied Statistics*. 7(1):295-318.
+    - OLS adjustment cannot hurt asymptotic precision when
+a full set of treatment $\times$ covariate interactions is included
+    - Huber-White sandwich standard error estimator is consistent or asymptotically conservative (regardless of whether interactions are included)
+    
+- An analogy. Imagine that we are biologists. We are interested in leaf size.
+    - Finding the size of leaves is hard, but weighing leaves is easy.
+    - Key insight is that we can use auxilliary information to be smarter:
+    - Sample from leaves on a tree. 
+      - Measure their size and weight
+      - Let $\bar{y}_s$ be the average size in the sample. We want $\bar{y}$. 
+      - Let $\bar{x}_s$ be the average weight in the sample. 
+      - We know that $\bar{y}_s$ unbiased and consistent for $\bar{y}$ but we have extra information- the mean population weight ($\bar{x}$)
+      - $\hat{\bar{y}} = \bar{y}_s + q(\bar{x}- \bar{x}_s)$, with some q e.g. from a regssion of $\bar{y}_s$ on $\bar{x}_s$ 
+
+# Connection to Multiple Regression
+- $Y_i =X_i Y_{1i} + (1-X_i)Y_{0i}$
+- We have auxiliary data on $Z$ and by random assignment, $X_i \perp Z_i$
+- Unlike leaves, we are sampling for both treatment and control potential outcomes
+- For treated units: E[$Y_i(1)$] is unbiased for $Y(1)$ but it ignores information from ${Z_i}$, so we use ${Y(1)}_{reg} = Y_i(1) + \beta(Z_i-\bar{Z})$
+- There's no reason to expect treatment and control groups to exhibit identical effects (form of omitted variable bias)
+- Putting it altogether: $Y_i = \alpha \beta_1 X_i +  \beta_2 Z_i +  \beta_2 (X_i \times Z_i)  + e_i$ 
+
+
+
+# Covariate Adjustment in Experiments
+- Now imagine we are social scientists (hopefully this isn't hard)
+- We are interested in the effects of a binary treatment on education, measured by a test.
+- Let's set up a simulation.
+- 250 students. Ten classes of 25 students each. Observed over two years.
+- First year has half good teachers and half bad.
+- We want to estimate the effect of the intervention in year 2.
+- Treatment is assigned randomly by **individual**
+- Note: This setup usually demands an accounting of clustering, which I'm ignoring. Maybe I'll bring it back later in the semester when we discuss SUTVA.
+
+
+# Simulation
+
+```{r 2-educ-sim}
+#Variables which govern the size of the simulation (and our causal effects)
+nclass <- 5
+nstudent <- 25
+Eff <- 5
+EffSD <- 3
+# Simulate data
+set.seed(1977)
+Yr1ClassType <- rep(c(1,0),nclass*nstudent)
+Yr2ClassType <- sample(Yr1ClassType,replace=FALSE)
+Yr1Score <- rnorm(2*nclass*nstudent,76+Yr1ClassType*5,9)
+# Fixed margins randomization
+Trt  <- sample(Yr1ClassType,replace=FALSE)
+# There is an independent effect of class type in each year
+# Variance is different across class types in year 2
+CtlOutcome <- rnorm(2*nclass*nstudent,Yr1Score+Yr2ClassType*3,9-Yr2ClassType*4)
+# Treatment effect is random, but with expectation Eff
+Yr2Obs <- CtlOutcome + Trt * rnorm(2*nclass*nstudent,Eff,EffSD)
+
+
+#regression models
+m1_unadj <- lm(Yr2Obs~Trt)
+m1_adj <- lm(Yr2Obs~Trt+Yr1Score)
+
+#results
+summary(m1_unadj)$coefficients[2,]
+summary(m1_adj)$coefficients[2,]
+
+
+# We don't want the model-based SEs,
+# we want the robust standard errors:
+list.of.packages <- c("estimatr")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+try(library('estimatr'),silent=TRUE)
+
+#robust standard errors
+commarobust(m1_adj) #default is HC2
+commarobust(m1_adj, se_type = "HC3")
+
+#robust standard errors
+m1_unadj <- lm_robust(Yr2Obs~Trt,se_type = "HC3")
+m1_adj <- lm_robust(Yr2Obs~Trt+Yr1Score,se_type = "HC3")
+
+```
+
+
+
+# Exercise
+In this exercise, we use replication data from [Munger 2019](https://link.springer.com/article/10.1007/s11109-016-9373-5). This study explores the effects of social sanctioning on racist online harassment. The author randomly assigns Twitter users with a historty of racist behavior to receive messages from Twitter bots with different attributes - in-group/out-group (same race) and high (500-550)/low(0-10) number of followers.  Here, we focus on just two groups - the control group (N=51) and the group that received tweets from bots that were in-group AND with a high number of followers (N=48). 
+
+#Part A
+Load the twitter_experiment file (using read.csv("twitter.csv")). The dataset is structured as follows:
+
+|Variable|Description|
+|-------|------|
+|treat.f |Treatment variable|
+|racism.scores.post.1wk | Racist harassment 1 week after treatment|
+|log.followers | log(Number of Followers )|
+|racism.scores.pre.2mon | Racist harassment 2 months before treatment|
+
+#Part B
+What is the unadjusted SATE? What is the standard error?
+
+#Part C
+Replace missing potential outcomes for each unit, assuming that the individual average treatment effect is $Y_i(1) - Y_i(0) = \tau_i \sim \mathcal{N}(0.2,0.2)$. Write a loop that generates a treatment vector 1000 times. Store the unadjusted SATE from each run. What is the unadjusted SATE? Where does the uncertainty arise from?
+
+#Part D
+Include the regressors log.followers and racism.scores.pre.2mon in a regression for the SATE. What is the adjusted SATE? What is the standard error?
+
+
+
+# SOLUTIONS
+```{r, echo=T, message=F}
+munger2019 <- read.csv("munger2019.csv")
+
+#unadjusted SATE
+diff.in.means <- function(Y,D){
+    diff.1 <- mean(Y[D == 1])- mean(Y[D == 0])
+    se.1 <-sqrt(var(Y[D== 1])/sum(D==1)
+                + var(Y[D==0])/sum(D == 0))
+    t <- diff.1/se.1
+    results <- c(diff.1,se.1,t)
+  return(results)
+}
+diff.in.means(munger2019$racism.scores.post.1wk,munger2019$treat.f)
+
+#potential outcomes
+Y1 <- rep(NA,100)
+Y0 <- rep(NA,100)
+
+#consistency: E[Y_i(0)] = E[Y_i(0)|D_i=0] and E[Y_i(1)] = E[Y_i(1)|D_i=1]
+Y1[munger2019$treat.f==1]=
+  munger2019$racism.scores.post.1wk[munger2019$treat.f==1]
+Y0[munger2019$treat.f==0]=
+  munger2019$racism.scores.post.1wk[munger2019$treat.f==0]
+
+#number of treated and control units
+t <- nrow(munger2019[munger2019$treat.f==1,])
+c <- nrow(munger2019[munger2019$treat.f==0,])
+
+# individual treatment effect
+Y0[munger2019$treat.f==1]=
+  munger2019$racism.scores.post.1wk[munger2019$treat.f==1]-
+  rnorm(t, mean = 0.2, sd = 0.2)
+Y1[munger2019$treat.f==0]=
+  munger2019$racism.scores.post.1wk[munger2019$treat.f==0]+
+  rnorm(c, mean = 0.2, sd = 0.2)
+
+
+tau <- Y1 - Y0 # individual treatment effect
+## true value of the sample average treatment effect
+SATE <- mean(tau)
+SATE
+
+
+#Generating the standard error of the SATE
+sims <- 5000 # repeat 5000 times, we could do more
+diff.means <- rep(NA, sims) # container
+for (i in 1:sims) {
+  ## randomize the treatment by sampling of a vector of 0s and 1s
+  treat <- sample(c(rep(1, 50), rep(0, 50)), size = 100, replace = FALSE)
+  ## difference-in-means
+  diff.means[i] <- mean(Y1[treat == 1]) - mean(Y0[treat == 0])
+}
+## estimation error for SATE
+est.error <- diff.means - SATE
+summary(est.error)
+
+#adjusted and unadjusted via regression
+summary(lm_robust(racism.scores.post.1wk~treat.f,data=munger2019))
+summary(lm_robust(racism.scores.post.1wk~treat.f*log.followers+
+                    treat.f*racism.scores.pre.2mon,data=munger2019))
+
+```
