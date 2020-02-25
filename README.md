@@ -1,2 +1,0 @@
-# sidakyntiso.github.io
- 
