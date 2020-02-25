@@ -1,0 +1,194 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
+% DS 201 (Lab 1)
+% Sidak Yntiso <sgy210@nyu.edu>, Office Hours: CDS 7th floor, 10-12 pm
+% February 3, 2020
+
+
+
+# Game plan
+- This presentation, created using [knitr](http://yihui.name/knitr/), is available on the course website
+- We will cover the basics (no familarity required): data structures, conditions + loops, data manipulation (dplyr, data.table)
+
+# R Resources
+- [The Art of R Programming](http://heather.cs.ucdavis.edu/~matloff/132/NSPpart.pdf) - N. Matloff
+- [Modern Applied Statistics with S](http://www.stats.ox.ac.uk/pub/MASS4/) - W. Venables and B. Ripley
+- [Advanced R Programming](http://adv-r.had.co.nz/) - H. Wickham
+- [The R Inferno](http://www.burns-stat.com/documents/books/the-r-inferno/) - P. Burns
+- Reading R documentation: <a href="http://stat.ethz.ch/R-manual/R-patched/library/stats/html/lm.html" target="_blank">`?lm`</a>
+- CRAN documentation: <a href="http://cran.r-project.org/web/packages/AER/index.html" target="_blank">AER</a>
+- Journal documentation: <a href="http://www.jstatsoft.org/v27/i02/">`plm`</a>
+- Resources for R Markdown: (https://bookdown.org/yihui/rmarkdown/)
+
+# Preliminaries
+- You will need to install [R](https://repo.miserver.it.umich.edu/cran/) and an environment e.g. [Rstudio](https://rstudio.com/)
+- Before running file, install knitr: install.packages("knitr")
+
+```
+require(knitr)
+knit(Lab1.Rmd)
+```
+
+# Data Structures
+```{r}
+# 3 types of data structures: vectors, arrays, and data frames
+#Two types of vectors: atomic/lists
+#Difference: atomic vectors are flat and will contain only elements of same type
+rm(list = ls())
+atom <- c(nums = 1:5,c(1),lets=letters[1:5])
+str(atom)
+
+lst <- list(nums = 1:5,c(1),lets=letters[1:5])
+str(lst)
+
+#three ways to index lists
+lst$nums
+lst[[1]]
+lst["nums"]
+
+#combine vectors with c
+c(lst,lst)
+
+#convert lst to atomic
+str(unlist(lst))
+
+##Arrays e.g. matrices
+mat <- matrix(rnorm(6),nrow=6,ncol=1) #rnorm, runif,rpois, etc generate random variables
+mat[,1]
+mat[1,]
+
+str(mat)
+ncol(mat)
+nrow(mat)
+
+#add/remove columns
+mat <- cbind(1,mat)
+rbind(mat,mat)
+
+#matrices are easy to manipulate
+#transpose
+t(mat)
+#X'X
+(t(mat) %*% mat)
+#(X'X)^-1
+solve((t(mat) %*% mat))
+#OLS
+y <- 2 + 2*mat[,2] + rnorm(6)
+solve(t(mat) %*% mat) %*% t(mat) %*% y
+ 
+##Dataframes are matrices that allow mixing different types
+dat <- data.frame(mat)
+dat$lst <- lst
+str(dat)
+
+#rename columns or rows
+colnames(dat) <- letters[1:ncol(dat)]
+rownames(dat) <- c(1:nrow(dat))
+
+```
+
+
+# Conditions and Loops
+```{r}
+
+
+#loops are easy to write but can be slow. vectorize when possible
+for (st in c(1:length(state.abb))){
+  print(state.abb[st])
+}
+
+
+#functions
+sum_US_area <- function(state.abb,state.area){
+  US_area <- 0
+  for (st in c(1:length(state.abb))){
+    US_area <- US_area + state.area[st]
+  }
+  return(US_area)
+}
+sum_US_area(state.abb,state.area)
+
+#useful functions you will likely use
+print(
+  c("print", "cat", "paste", "with", "length", "sort", "order", "unique", "rep", "nrow", "ncol",
+    "complete.cases", "subset", "merge", "mean", "sum", "sd", "var", "lag","lm", "model.matrix","coef", "vcov",
+    "residuals", "vcovHC (from sandwich)", "ivreg (from AER)", "summary", "pdf", "plot")
+)
+
+
+#use apply, lapply, sapply for similar reasons
+#apply (aptly named) applies some function to rows (1) or columns (2) of matrix
+head(state.x77)
+apply(state.x77,2,mean)
+
+#sapply applies some function to every element of a vector
+sapply(mat, function(x) x+1)
+#lapply is the same as sapply except it returns list output (instead of vector output)
+class(sapply(mat, function(x) x+1))
+class(lapply(mat, function(x) x+1))
+
+
+#if/else
+if ("NY" %in% state.abb){
+  print("NY is a state")
+} else {
+  print("NY is not a state")
+}
+
+```
+
+# Data Manipulation
+```{r}
+data(iris)
+#to load datasets use haven::read_dta,read.table,data.table::fread, etc
+
+#Many ways to handle data in R. base (above), dplyr and data.table (below)
+
+#dplyr syntax
+#install.packages("dplyr")
+library(dplyr)
+#summarize data by column
+iris %>% 
+  summarise(av_sepal_len=mean(Sepal.Length))
+#summarize data by column and group
+iris %>%  
+  group_by(Species) %>% 
+  summarise(av_sepal_len=mean(Sepal.Length))
+#classify data by column and group
+iris %>%  
+  group_by(Species) %>% 
+  mutate(high_sep_len=if_else(Sepal.Length > mean(Sepal.Length),"High","Low"))
+#creating new data
+iris_average <- iris %>%  
+    group_by(Species) %>% 
+    summarise(av_sepal_len=mean(Sepal.Length))
+
+#data.table synatx 
+#install.packages(data.table)
+#data.table is faster with larger datasets
+library(data.table)
+iris <- data.table(iris)
+
+#subsetting data by selecting rows
+head(iris[Species == 'virginica'])
+
+#selecting columns. the dot symbol calls lists
+iris[, .(Species)]
+
+#selecting rows and columns. all columns except Petal.Length. with=F 
+head(iris[Species == 'virginica', -c("Petal.Length")])
+
+#computations
+iris[Species == 'virginica', .( mean_petal_length = mean(Petal.Length)) ]
+
+#computations by group
+iris[, .( mean_petal_length = mean(Petal.Length),
+                                sd_petal_length = sd(Petal.Length),
+                                N = .N),
+     by = .(Species)]
+
+```
+
