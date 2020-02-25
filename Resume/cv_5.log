@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (MiKTeX 2.9.6600 64-bit) (preloaded format=pdflatex 2018.2.24)  7 FEB 2020 18:22
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (MiKTeX 2.9.6600 64-bit) (preloaded format=pdflatex 2018.2.24)  25 FEB 2020 01:43
 entering extended mode
 **./cv_5.tex
 (cv_5.tex
@@ -742,11 +742,6 @@ Underfull \hbox (badness 10000) in paragraph at lines 40--45
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 51--55
-
- []
-
-
 Underfull \hbox (badness 10000) in paragraph at lines 56--68
 
  []
@@ -811,79 +806,80 @@ Underfull \hbox (badness 10000) in paragraph at lines 101--105
 
  []
 
+
+Underfull \hbox (badness 10000) in paragraph at lines 106--114
+
+ []
+
 [1
 
 {C:/Users/Sidak Yntiso/AppData/Local/MiKTeX/2.9/pdftex/config/pdftex.map}]
-Underfull \hbox (badness 10000) in paragraph at lines 106--113
+Underfull \hbox (badness 10000) in paragraph at lines 115--121
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 114--120
+Underfull \hbox (badness 10000) in paragraph at lines 123--138
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 122--136
+Underfull \hbox (badness 10000) in paragraph at lines 143--153
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 141--151
+Underfull \hbox (badness 10000) in paragraph at lines 154--162
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 152--160
+Underfull \hbox (badness 10000) in paragraph at lines 154--162
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 152--160
+Underfull \hbox (badness 10000) in paragraph at lines 165--173
 
  []
 
-
-Underfull \hbox (badness 10000) in paragraph at lines 163--171
-
- []
-
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 202.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 204.
 pdfTeX warning (ext4): destination with the same identifier (name{page.}) has b
 een already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.202 \end{document}
+l.204 \end{document}
                      [2]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 202.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 204.
  (cv_5.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 202.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 202.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 204.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 204.
 Package rerunfilecheck Info: File `cv_5.out' has not changed.
 (rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
 
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 202.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 204.
  ) 
 Here is how much of TeX's memory you used:
- 6918 strings out of 493303
- 101879 string characters out of 3126737
+ 6920 strings out of 493303
+ 102029 string characters out of 3126737
  196109 words of memory out of 3000000
- 10411 multiletter control sequences out of 15000+200000
- 7340 words of font info for 26 fonts, out of 3000000 for 9000
+ 10412 multiletter control sequences out of 15000+200000
+ 7508 words of font info for 27 fonts, out of 3000000 for 9000
  1141 hyphenation exceptions out of 8191
- 28i,13n,25p,204b,399s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 28i,14n,25p,204b,535s stack positions out of 5000i,500n,10000p,200000b,50000s
 <C:/Users/Sidak Yntiso/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/a
 msfonts/cm/cmbx10.pfb><C:/Users/Sidak Yntiso/AppData/Local/Programs/MiKTeX 2.9/
 fonts/type1/public/amsfonts/cm/cmbx12.pfb><C:/Users/Sidak Yntiso/AppData/Local/
 Programs/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/Sidak Yn
 tiso/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmti10.pf
-b>
-Output written on cv_5.pdf (2 pages, 72048 bytes).
+b><C:/Users/Sidak Yntiso/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/a
+msfonts/cm/cmtt10.pfb>
+Output written on cv_5.pdf (2 pages, 83187 bytes).
 PDF statistics:
- 32 PDF objects out of 1000 (max. 8388607)
+ 39 PDF objects out of 1000 (max. 8388607)
  2 named destinations out of 1000 (max. 500000)
  1 words of extra memory for PDF output out of 10000 (max. 10000000)
 
