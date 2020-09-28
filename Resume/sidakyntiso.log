@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (MiKTeX 2.9.6600 64-bit) (preloaded format=pdflatex 2018.2.24)  28 SEP 2020 13:54
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (MiKTeX 2.9.6600 64-bit) (preloaded format=pdflatex 2018.2.24)  28 SEP 2020 14:29
 entering extended mode
 **./sidakyntiso.tex
 (sidakyntiso.tex
@@ -762,16 +762,6 @@ Underfull \hbox (badness 10000) in paragraph at lines 70--77
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 70--77
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 78--88
-
- []
-
-
 Underfull \hbox (badness 10000) in paragraph at lines 78--88
 
  []
@@ -792,75 +782,70 @@ Underfull \hbox (badness 10000) in paragraph at lines 89--101
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 89--101
+Underfull \hbox (badness 10000) in paragraph at lines 103--107
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 105--109
+Underfull \hbox (badness 10000) in paragraph at lines 108--117
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 110--119
+Underfull \hbox (badness 10000) in paragraph at lines 118--124
 
  []
 
 [1
 
 {C:/Users/Sidak Yntiso/AppData/Local/MiKTeX/2.9/pdftex/config/pdftex.map}]
-Underfull \hbox (badness 10000) in paragraph at lines 120--126
+Underfull \hbox (badness 10000) in paragraph at lines 125--139
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 128--142
+Underfull \hbox (badness 10000) in paragraph at lines 144--154
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 147--157
+Underfull \hbox (badness 10000) in paragraph at lines 155--163
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 158--166
+Underfull \hbox (badness 10000) in paragraph at lines 155--163
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 158--166
+Underfull \hbox (badness 10000) in paragraph at lines 166--174
 
  []
 
-
-Underfull \hbox (badness 10000) in paragraph at lines 169--177
-
- []
-
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 208.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 205.
 pdfTeX warning (ext4): destination with the same identifier (name{page.}) has b
 een already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.208 \end{document}
+l.205 \end{document}
                      [2]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 208.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 205.
  (sidakyntiso.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 208.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 208.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 205.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 205.
 Package rerunfilecheck Info: File `sidakyntiso.out' has not changed.
 (rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
 
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 208.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 205.
  ) 
 Here is how much of TeX's memory you used:
  6919 strings out of 493303
  102119 string characters out of 3126737
- 196123 words of memory out of 3000000
+ 197123 words of memory out of 3000000
  10411 multiletter control sequences out of 15000+200000
  7508 words of font info for 27 fonts, out of 3000000 for 9000
  1141 hyphenation exceptions out of 8191
@@ -872,7 +857,7 @@ Programs/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/Sidak Yn
 tiso/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmti10.pf
 b><C:/Users/Sidak Yntiso/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/a
 msfonts/cm/cmtt10.pfb>
-Output written on sidakyntiso.pdf (2 pages, 85016 bytes).
+Output written on sidakyntiso.pdf (2 pages, 85000 bytes).
 PDF statistics:
  39 PDF objects out of 1000 (max. 8388607)
  2 named destinations out of 1000 (max. 500000)
