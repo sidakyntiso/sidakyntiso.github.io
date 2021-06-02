@@ -1,0 +1,262 @@
+---
+title: 'Lab 11: Sensitivity Analysis'
+author: "Sidak Yntiso sgy210@nyu.edu"
+date: "April 20, 2020"
+output:
+  beamer_presentation:
+  incremental: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.pos = 'h')
+```
+
+  
+# Sensitivity Analysis
+
+- Observational research assumes some form of ignorability
+  - An assumption that is unverifiable from observable data
+  - Balance tests and placebo tests are consistent with ignorability but are not dispositive
+
+. . . 
+
+- How can we improve on this? 
+  - Review approach of [Cinelli and Hazlett (2020)](https://rss.onlinelibrary.wiley.com/doi/full/10.1111/rssb.12348)
+  - Describe the type of confounder that would substantively change our conclusions about the ATE
+  - Assess how plausible such confounding is given expert knowledge and research design
+  
+
+# Empirical application
+
+- What is the effect of exposure to violence on attitudes towards peace (in Darfur, Sudan)
+
+- In 2003 and 2004, the Darfurian government killed an estimated two hundred thousand people. 
+
+  - Villages were aerially bombarded and then razed/looted by the *Janjaweed*, a pro-government militia.
+
+  - Violence within villages was indiscriminate. With one exception, women were targeted and often subjected to sexual violence.
+
+- The outcomes of interest: individual willingness to make peace with those who perpetrated this violence
+
+# The threat of unobserved confounders
+
+What if bombs were still more likely to hit the center of the village, and those in the center would also likely hold different attitudes towards peace? 
+
+What if the *Janjaweed* targetted the wealthy and wealth is correlated with attitudes towards peace? 
+
+How strong would these unobserved confounders (or *all* reamaining unobserved confounders?
+
+Can we use the fact that any unobservable variable (e.g. wealth) is unlikely to as strongly affect the outcome/treatment as gender would be?
+
+# What information do we need to assess sensitivity? 
+
+. . .
+
+Remember OVB = impact times imbalance
+
+\begin{align}
+\underbrace{E[Y_i | D_i = 1] - E[Y_i | D_i = 0]}_{\text{Difference-in-means}} &= \nonumber \\
+\underbrace{E[Y_i(1) - Y_i(0) | D_i = 1]}_{\text{ATT}}  
+&+ \underbrace{E[Y_i(0) | D_i = 1] - E[Y_i(0)| D_i = 0]}_{\text{Selection bias}} \nonumber 
+\end{align}
+
+We saw that selection bias $= \sum_{d=0}^1 \left\{E[Y_i(0) |X_i = 1] - E[Y_i(0) | X_i = 0]\right\} \times \mathbb{P}(X_i = 0 | D_i = d)$
+
+# OLS expression of bias 
+
+\begin{align}
+\underbrace{Y = \hat{\tau} D_i + \textbf{X}_i \hat{\beta} + \hat{\gamma} Z_i + \epsilon_i}_{\text{Full regression}} \nonumber \\
+\underbrace{Y = \hat{\tau}_{res} D_i + \textbf{X}_i \hat{\beta} + \epsilon_i}_{\text{Available Regression}} \nonumber
+\end{align}
+
+If omitted variable has $Z = \hat{\delta} D_i + \textbf{X}_i \hat{\mu} + \nu_i$
+
+- selection bias = $\hat{\gamma} \hat{\delta}$
+ 
+Issues with traditional OVB formulation:
+
+- If omitted variable is nonbinary, then covariate scaling effects $\hat{\delta}$
+
+- If there are more than one confounders, especially if they interact non-linearly, $\hat{\delta}$ is hard to assess
+
+# Reformulating traditional OVB
+
+\begin{align}
+\hat{bias}=
+\underbrace{\frac{cov(E[D|X],E[Z|X])}{Var(E[D|X])}}_{\hat{\gamma}} \underbrace{\frac{cov(E[Y|X,D],E[Z|X,D])}{Var(E[Z|X,D])}}_{\hat{\delta}} \nonumber 
+\end{align}
+
+Noting that  $cov(A,B) = cor(A,B)/(\sigma_A \sigma_B)$...
+\begin{align}
+&=\frac{cor(E[D|X],E[Z|X]) \times sd(E[Z|X])}{sd(E[D|X])} \nonumber \\  
+&\times \frac{cor(E[Y|X,D],E[Z|X,D]) \times sd(E[Y|X,D])}{sd(E[Z|X,D])} \nonumber \\
+&=\frac{cor(E[D|X],E[Z|X]) cor(E[Y|X,D],E[Z|X,D])\times sd(E[Z|X,D])}{\frac{sd(E[Z|X,D])}{sd(E[Z|X])}}  \nonumber \\
+&\times \frac{ sd(E[Y|X,D])}{sd(E[D|X])} \nonumber
+\end{align}
+
+# Partial $R^2$ formulation
+
+partial $R^2_{Y\sim Z|D,X} = 1 - \frac{Var(E[Y|D,X])}{Var(Y)} = cor(E[Y|D,X],Y)^2$
+ 
+\begin{align}
+\hat{bias} &= \sqrt{\frac{R^2_{Y\sim Z|D,X} \times R^2_{D\sim Z|X}}{1-R^2_{D\sim Z|X}}} \frac{ sd(E[Y|X,D])}{sd(E[D|X])} \nonumber
+\end{align}
+
+Noting that $sd(\hat{\tau}_{res}) = \frac{sd(E[Y|X,D])}{sd(E[D|X])} \sqrt{\frac{1}{df}}$
+
+\begin{align}
+\hat{bias} &= sd(\hat{\tau}_{res}) \sqrt{\frac{R^2_{Y\sim Z|D,X} \times R^2_{D\sim Z|X} (df) }{1-R^2_{D\sim Z|X}}} \nonumber 
+\end{align}
+
+# Comments;
+
+Partial $R^2_{Y\sim Z|D,X}$ 
+
+- Proportion of Y that is explained by Z, D and X. We can reason about this parameter without Z.
+
+- Formulation is scale-free i.e. does not matter whether Z enters linearly or interacts with other unobservable confounders
+
+- Gives us two different ways to think about sensitivity
+
+# Extreme scenario case
+
+If there were an *extreme* confounder that explained all the residual variance of the outcome, how strongly associated would it need to be in order to eliminate the estimated ATE ($\tau_{res})$?  
+
+. . .
+
+  - Explains all the residual variance means $R^2_{Y\sim Z|D,X} = 1$
+  
+  - To eliminate estimate effect means bias = $\tau_{res}$. 
+  
+  - $\frac{\tau_{res}}{sd(\hat{\tau}_{res})} = t = \sqrt{ \frac{R^2_{Y\sim D|X}}{1-R^2_{Y\sim D|X}} \times df}$
+  
+  - Implies the unknown value $R^2_{D \sim Z|X}$ must be $R^2_{Y \sim D|X}$
+  
+  - How sensitive are our results to including an extreme confounder s.t.,  $R^2_{Y\sim Z|D,X} = 1$
+  
+  
+# The robustness value
+
+If there were an confounder with an equal association to outcome and treatment ($RV_q$), how strong would that association have to be in order to reduce the estimated ATE by $(100 \times q) \%$
+
+. . . 
+
+- Equal association means  $R^2_{D\sim Z|X} =R^2_{Y \sim Z|X,D} = RV_q$
+
+- Re-writing above expressions reveals this is 
+  $RV_q = 1/2 (\sqrt{f^4_q + 4 f_q^2} - f^2_q)$, 
+where
+
+  - $f_{D\sim Z|X} = \sqrt{\frac{R^2_{D\sim Z|X}}{1-R^2_{D\sim Z|X}}}$
+  
+- RV close to one means the ATE is robust to confounders explaining almost all the residual variation of the treatment and outcome. RV close to zero means a weak confounder could eliminate the ATE.
+
+# Load the Data
+
+```{r, message=FALSE}
+# loads package
+#install.packages("sensemakr")
+library(sensemakr)
+
+# loads data
+data("darfur")
+```
+
+The variables are: 
+
+`directlyharmed` -  indicates whether the individual was physically injured or maimed during the attack on her or his village in Darfur. 
+
+`peacefactor` - main outcome: an index measuring pro-peace attitudes.  
+
+
+# OLS model
+```{r, message=FALSE}
+library(estimatr)
+# runs regression model
+darfur.model <- lm(peacefactor ~ directlyharmed+ village +
+                     female+age+ farmer_dar+ herder_dar + 
+                     pastvoted+hhsize_darfur,data = darfur)
+summary(darfur.model)$coefficients[c(1:2),c(1:3)]
+
+```
+
+
+
+
+# Sensitivity statistics for routine reporting
+
+```{r}
+#compute partial R-squared
+partial_r2(t_statistic = 0.097/0.023, dof = 783)
+
+# robustness value
+robustness_value(t_statistic = 0.097/0.023, dof = 783)
+
+#minimum strength of confounding to bring the lower bound 
+#of the 95 CI to half the current estimate
+
+robustness_value(t_statistic = 0.097/0.023, dof = 783, 
+                 q = 1/2, alpha = 0.05)
+```
+
+# Plot the sensitivity results
+
+```{r}
+ovb_contour_plot(estimate = 0.097, se = 0.023, dof = 783)
+```
+
+
+# Sensitivity Analysis
+
+```{r, results = 'asis'}
+# runs sensemakr for sensitivity analysis in the example
+darfur.sensitivity <- 
+  sensemakr(model = darfur.model, 
+            treatment = "directlyharmed",
+            benchmark_covariates = "female",
+            kd = 1:3, ky = 1:3, q = 1,
+            alpha = 0.05, reduce = TRUE)
+```
+
+# Minimal sensitivity reporting
+
+
+```{r}
+darfur.sensitivity
+```
+
+
+
+# Sensitivity contour plots with comparison to female covariate
+```{r}
+plot(darfur.sensitivity)
+```
+
+# Sensitivity of the t-value
+
+
+```{r}
+plot(darfur.sensitivity, sensitivity.of = "t-value")
+```
+
+# Sensitivity plots of extreme scenarios
+
+
+```{r, fig.width=6, fig.height=4}
+plot(darfur.sensitivity, type = "extreme")
+```
+
+
+
+# Discussion
+
+Sensitivity analysis seeks to address: 
+
+- How strong would an unobserved confounder (or a group of confounders) have to be to change our research conclusions?
+
+- In a *worst-case* scenario, how robust are our results to *all* unobserved confounders acting together, possibly non-linearly?
+
+- How strong would confounding need to be *relative* to the strength of observed covariates, to change our answer a certain amount?
+
+

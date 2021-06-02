@@ -1,0 +1,362 @@
+---
+title:  'Lab 7: Matching'
+author: "Sidak Yntiso sgy210@nyu.edu (based on notes by D Dimmery)"
+date: "March 23, 2020"
+output:
+  beamer_presentation:
+  incremental: true
+---
+  
+# Matching Big Picture
+- Zoom link: https://nyu.zoom.us/j/911298463
+- MATCHING IS NOT AN IDENTIFICATION STRATEGY.
+
+. . .
+
+- Heckman, Ichimura, Smith and Todd (1998) decomposition:
+- $B = \int_{S_{1X}} E[Y_0|X, D=1] dF(X|D=1) -\int_{S_{0X}} E[Y_0 | X, D=0] dF(X|D=0),$
+  - $S_{1X}$ is the support of X for treated units, $S_{X} = S_{1X} \cap  S_{0X}$
+  
+. . .
+
+  - $B = B_1 + B_2 + B_3$
+    - $B_1 = \int_{S_{1X} \setminus S_X} E[Y_0 |X, D=1] dF(X|D=1) -$ 
+      $\int_{S_{0X} \setminus S_X} E[Y_0 |X, D=0] dF(X|D=0)(X|D=0),$
+      - where $S_{1X} \setminus S_X$ is the support of X only observed under D=1
+    - $B_2 = \int_{S_X} E[Y_0 |X, D=0] (dF(X|D=1)-dF(X|D=0))$
+    - Matching addresses $B_1$ and $B_2$
+
+. . .
+
+  - $B_3 = (\int_{S_X} dF(X|D=1)) \bar{B}_{S_X}$
+  - CIA requires an assumptions to control $B_3$. 
+- How could two identical units receive *different* treatments?
+  
+# Given CIA ... why not just put covariates in a regression?
+. . .
+
+- Separating the procedures mean that you can address two types of confounding separately.
+1. Different treatment groups may have different chances of getting treated.
+2. Different treatment groups may have different baseline (control) potential outcomes.
+- A design which addresses both of these options separately is called "doubly robust".
+  - Double robustness means that we only have to get ONE of these right for consistent estimation.
+
+# Load packages
+
+```{r 5-setup}
+#install packages
+#install.packages("MatchIt",type="source)
+#install.packages("cem",repos="http://r.iq.harvard.edu", type="source")
+
+try(library('MatchIt'),silent=TRUE)
+try(library('cem'),silent=TRUE)
+```
+
+
+# Setup dataset
+- Lalonde 1986 evaluates the returns a 1976 jobs training program (National Supported Work Demonstration)
+- Outcome `re78` is retained earnings in 1978; treatment is the job training program (NT=185).
+
+. . .
+
+```{r 5-lalonde}
+data(lalonde,package="MatchIt")
+match.data <- subset(lalonde,treat==1)
+#notice continuous covariates; subclassification difficult
+covs="age+educ+black+hispan+married+nodegree+re74+re75"
+base.mod <- lm(paste("re78 ~ treat+",covs,sep=""),lalonde)
+coefs <- c(base=coef(base.mod)[2])
+
+```
+
+# Estimates
+```{r 5-lalonde-results}
+coefs
+```
+
+# Covariate Balance
+```{r 5-lalonde-balance}
+trt <- lalonde$treat==1
+means <- apply(lalonde[,-1],2,function(x) 
+  tapply(x,trt,mean)) #estimate means by treat group
+sds <- apply(lalonde[,-1],2,function(x) 
+  tapply(x,trt,sd)) #estimate sds by treat group
+rownames(means)<-rownames(sds)<-c("Treated","Control")
+t.p <- apply(lalonde[,-1],2,function(x) 
+  t.test(x[trt],x[!trt])$p.value) #ttest for covariate
+```
+
+# View Initial Balance
+```{r 5-lalonde-init-bal}
+round(t(rbind(means,sds,t.p)),3)
+```
+# Exact 
+- http://gking.harvard.edu/matchit
+```{r 5-exact}
+
+em.match <- matchit(treat~age+educ+black+hispan+married+
+                      nodegree+re74+re75,data=lalonde,
+                    method='exact')
+exact.data <- match.data(em.match) #N=25 observations
+head(exact.data[order(exact.data$subclass),c(1,8:12)])
+```
+
+
+# Formula ATE 
+```{r 5-exact-formula}
+set.seed(11)
+#randomly select treated and control units within subclass
+exact.data$id <- paste(exact.data$subclass,
+                       exact.data$treat)
+rand.units <- unlist(
+  lapply(unique(exact.data[,"id"]),function(x) 
+  sample(rownames(exact.data)[exact.data$id==x], 1) ))
+exact.data_deduped<- exact.data[rand.units,]
+#subtract treatment group means
+diff.in.means =  function(treat,outcome,subclass,x) {
+  outcome[treat==1&subclass==x] - 
+    outcome[treat==0&subclass==x]
+}
+```
+# Formula ATE 2 
+```{r 5-exact-formula2}
+#ATE
+em_ate = mean(unlist(lapply(
+  unique(exact.data_deduped[,"subclass"]),
+  function(x) diff.in.means(exact.data_deduped$treat,
+                            exact.data_deduped$re78,
+                            exact.data_deduped$subclass,x))))
+#variance
+em_var = mean(unlist(lapply(
+  unique(exact.data_deduped[,"subclass"]),
+  function(x) (diff.in.means(exact.data_deduped$treat,
+                             exact.data_deduped$re78,
+                             exact.data_deduped$subclass,x) 
+               - em_ate)^2)))
+em_ate; sqrt(em_var)
+coefs <- c(coefs,exact.ate = em_ate)
+```
+# Estimates
+```{r 5-em_ate-results}
+coefs
+```
+
+# Regression Model 
+What seems problematic with that approach?
+
+. . .
+
+```{r 5-exact-est}
+exact.mod <- lm(paste("re78 ~ treat+",covs,sep=""),
+             exact.data,weights=exact.data$weights)
+summary(exact.mod)$coefficients
+coefs <- c(coefs,exact.matchit=coef(exact.mod)[2])
+```
+Where the weights are 
+
+- $w_i$ = 1 if treated
+- $w_i = \frac{\text{\# total control}}{\text{\# total treated}}  \frac{\text{\# subclass treated}}{\text{\# subclass control}}$ if control
+
+# Estimates
+```{r 5-exact-results}
+coefs
+```
+
+# Nearest Neighbor
+```{r 5-matchit}
+nn.match <- matchit(treat~age+educ+black+hispan+married+
+                      nodegree+re74+re75,data=lalonde,
+                    method='nearest',discard='control',
+                    exact=c('nodegree','black'),
+                    distance='GAMlogit')
+nn.mod <- lm(paste("re78 ~ treat+",covs,sep=""),
+             lalonde,weights=nn.match$weights)
+coefs2 <- c(nn.matchit=coef(nn.mod)[2])
+```
+
+# Estimates
+```{r 5-matchit-results}
+coefs
+coefs2
+```
+
+# CEM
+
+- CEM just creates bins along each covariate dimension (either pre-specified or automatic)
+- Units lying in the same strata are then matched together
+- Curse of dimensionality means that with lots of covariates, we'll only rarely have units in the same strata.
+- What does that mean we're estimating? Is it the ATT?
+
+. . .
+
+```{r 5-cem-start}
+cem.match <- cem(treatment="treat",data=lalonde,
+                 drop="re78")
+cem.match #395 strata
+
+cem.mod <- lm(paste("re78 ~ treat+",covs,sep=""),
+              lalonde,weights=cem.match$w)
+coefs2<-c(coefs2,cem=coef(cem.mod)[2])
+
+```
+# Estimates
+```{r 5-cem-results}
+coefs
+coefs2
+```
+
+
+# Tweaking CEM
+
+```{r 5-tweak-cem}
+cutpoints <- list(age=c(25,35),educ=c(6,12),
+                  re74=c(100,5000),re75=c(100,5000))
+cem.tweak.match <- cem(treatment="treat",
+                       data=lalonde,
+                       drop="re78",cutpoints=cutpoints)
+cem.tweak.match
+
+cem.tweak.mod <- lm(paste("re78 ~ treat+",covs,sep=""),
+                    lalonde,weights=cem.tweak.match$w)
+coefs2<-c(coefs2,cem.tweak=coef(cem.tweak.mod)[2])
+```
+
+# Estimates
+```{r 5-tweak-results}
+coefs
+coefs2
+```
+
+
+
+# Mahalanobis Distance
+- $(x-\mu)'V^{-1}(x-\mu)$
+- In our case, $\mu$ corresponds to a given treated unit.
+- Mahalanobis distance is a very common distance "metric".
+- You can think about it as simple Euclidean distance in a warped feature space (warped according the the inverse variance-covariance matrix)
+
+. . .
+
+```{r 5-mahal}
+ctl.data <- subset(lalonde,treat==0)
+V<-cov(lalonde[,-c(1,ncol(lalonde))])
+mahal.dist <- apply(match.data[,-c(1,ncol(match.data))],1,
+                    function(x) mahalanobis(
+                      ctl.data[,-c(1,ncol(ctl.data))],x,V))
+matches <- apply(mahal.dist,2,which.min)
+N <- length(matches)
+match.data <- rbind(match.data,ctl.data[matches,])
+sort(table(apply(mahal.dist,2,which.min)))
+```
+
+# Evaluate Balance
+
+```{r 5-mahal-bal,tidy=FALSE}
+trt.factor <- rep(c("Treat","Control"),c(N,N))
+means <- apply(match.data[,-1],2,function(x) 
+  tapply(x,trt.factor,mean)) #estimate means by treat group
+sds <- apply(match.data[,-1],2,function(x) 
+  tapply(x,trt.factor,sd)) #estimate sds by treat group
+rownames(means)<-rownames(sds)<-c("Treated","Control")
+t.p <- apply(match.data[,-1],2,function(x) 
+  t.test(x[1:N],x[{N+1}:{2*N}])$p.value) #ttest for covariate
+```
+
+# View Matched Balance
+```{r 5-show-mahal-bal}
+round(t(rbind(means,sds,t.p)),3)[-9,]
+```
+
+# And Estimate ATT
+
+```{r 5-mahal-att,tidy.opts=list(width.cutoff=30)}
+mahal.match.mod <- lm(paste("re78 ~ treat+",covs,sep=""),
+                      match.data)
+coefs3 <- c(mahal.match=coef(mahal.match.mod)[2])
+```
+# Estimates
+```{r 5-mahal-results}
+coefs
+coefs2
+coefs3
+```
+
+
+# Fitting the Propensity Score
+- First, estimate a model of the propensity score.
+- (Typically just some logit)
+
+. . .
+
+```{r 5-lalonde-fit-pscore, fig.cap='', fig.height=5, fig.width=10}
+p.model <- glm(paste("treat~",covs,sep=""),
+               lalonde,family="binomial")
+pscore.logit <- predict(p.model,type="response")
+hist(pscore.logit)
+```
+
+
+# Estimate Model
+- What do you want to estimate? This will change the appropriate weights.
+- For ATT, sampling probability for treated units is $1$.
+
+. . .
+
+```{r 5-est-pscoremods}
+
+ipw.logit <- trt + (1-trt)/(1-pscore.logit)
+ipw.logit.mod <- lm(paste("re78 ~ treat+",covs,sep=""),
+                    lalonde,weights=ipw.logit)
+##ATT estimates
+coefs3 <- c(coefs3,
+           ipw.logit=coef(ipw.logit.mod)[2])
+```
+
+# Estimates
+```{r 5-est-results}
+coefs
+coefs2
+coefs3
+```
+
+# Propensity Score matching
+- We don't have to weight, though. We might match, instead.
+
+. . .
+
+```{r 5-prop-score-match}
+ctl.data <- subset(lalonde,treat==0)
+pscore.logit.ctl<-pscore.logit[!trt]
+pscore.logit.trt<-pscore.logit[trt]
+match.data <- subset(lalonde,treat==1)
+matches <- sapply(pscore.logit.trt,function(x) 
+  which.min(abs(pscore.logit.ctl-x)))
+match.data <- rbind(match.data,ctl.data[matches,])
+pm.logit.mod<-
+  lm(paste("re78 ~ treat+",covs,sep=""),match.data)
+```
+
+# Estimation and such
+
+```{r 5-pscore-att, fig.cap='', fig.height=3, fig.width=6}
+plot(c(pscore.logit.trt,pscore.logit.ctl[matches]),axes=F,
+     ylab="Treatment group",xlab="Propensity Score")
+axis(1); axis(2,c(0,1))
+coefs3 <- c(coefs3,pmat.logit=coef(pm.logit.mod)[2])
+```
+
+# Final Estimates
+```{r 5-pscore-results}
+coefs
+coefs2
+coefs3
+```
+
+
+
+
+
+
+
+
+

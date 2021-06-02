@@ -1,0 +1,290 @@
+---
+title: 'Intstrumental Variables'
+author: "Sidak Yntiso sgy210@nyu.edu"
+date: "April 13, 2020"
+output:
+  beamer_presentation:
+  incremental: true
+---
+
+# Identifying assumptions
+
+Second stage: $Y_i = \alpha_0 + \alpha_1 D_i + \epsilon_i$ 
+
+First stage: $D_i = \beta_0 + \beta_1 Z_i + \mu_i$
+
+- Exogenous instrument 
+  - $Cov(Z_i,\mu_i)=0$ i.e., $D_0,D_1 \perp \!\!\! \perp   Z$
+- Exclusion restriction
+  - $Cov(Z_i,\epsilon_i)=0$ i.e.,  $Y_0,Y_1 \perp \!\!\! \perp   Z$
+- First stage
+  - $\beta_1 \not =0$ i.e, $0 < P(Z=1) < 1 \text{ and } P(D_1=1) \neq P(D_1=0)$
+- Monotonicity ($D_1 \geq D_0$)
+
+# Overview
+
+- Wald estimator 
+  - Constant treatment effects & binary instrument   
+  - Tests for first stage 
+  - Placebo regressions for exclusion restriction
+  
+- Preliminaries on 2SLS estimator
+  - More in class
+  - Heteregeneous treatment effects
+  - Two papers
+  
+  
+
+# Paper 1: Bloom et al 1997
+
+- What is the effect of participation in job training programs on earnings? 
+
+- Leverage random assignment of admission to training program
+  - 21,000 person RCT commisioned by US Dept of Labor in 1986
+  - 16 local areas across the country between 1987 and 1989
+  - Sample consists of economically disadvantaged adults and out-of-school youths
+  
+- Outcomes: total earnings and educational attainment
+
+- Problems with compliance (not a perfect experiment)
+
+
+# Load the Data 
+
+```{r}
+library(haven)
+library(estimatr)
+rm(list=ls())
+setwd("C:\\Users\\Sidak Yntiso\\Dropbox\\CI\\Week 10\\Lab")
+load("jtpa.RDA")
+
+#imperfect compliance
+mean(d$training[d$assignmt==1])
+mean(d$training[d$assignmt==0])
+
+#naive OLS maybe biased
+summary(lm_robust(earnings~training,data=d))$coefficients
+```
+  
+# First stage effect
+```{r}
+#regression effect of Z on D
+summary(lm_robust(training~assignmt,data=d))$coefficients
+
+#$\frac{Cov(D,Z)}{Var(Z)}$
+vmat <- cov(d[,c("earnings","training","assignmt")])
+vmat[3,2]/vmat[3,3]
+
+```
+
+# Reduced form/Intent to Treat Effect
+```{r}
+#regression effect of Z on Y
+summary(lm_robust(earnings~assignmt,data=d))$coefficients
+
+#$\frac{Cov(Y,Z)}{Var(Z)}$
+vmat[1,3]/vmat[3,3]
+```
+
+
+# Wald Estimator
+
+- Effect of D on Y using only exogenous variation in D induced by Z:
+\begin{align}
+\rho &= \frac{\frac{Cov(Y,Z)}{Var(Z)}}{\frac{Cov(D,Z)}{Var(Z)}} = {\text{Reduced form} \over \text{First stage}} \nonumber \\
+&= \frac{Cov(Y,Z)}{Cov(D,Z)} =\frac{\sum_{i=1}^N (z_i - \bar{z}) (y_i - \bar{y})}{\sum_{i=1}^N (z_i - \bar{z}) (D_i - \bar{D})}  \nonumber 
+\end{align}
+
+# Estimation
+
+Focusing on the numerator...
+\begin{align}
+\sum_{i=1}^N (z_i - \bar{z}) (y_i - \bar{y})
+&=\sum_{i=1}^N z_i (y_i - \bar{y})-(\sum_{i=1}^N \bar{z} (y_i - \bar{y})) \nonumber \\
+&=\sum_{i=1}^N (z_i y_i - z_i \bar{y})-\bar{z}(\sum_{i=1}^N (y_i - \bar{y})) \nonumber \\
+&=\sum_{z_i=1} (z_i y_i - z_i \bar{y})-\bar{z}(n\bar{y}-n\bar{y}) \nonumber \\
+&=\sum_{z_i=1} (z_i y_i - z_i \bar{y}) \nonumber
+\end{align}
+
+
+# The ratio
+
+\begin{align}
+\rho&=\frac{\sum_{z_i=1} (z_i y_i - z_i \bar{y})}{n_1} / \frac{\sum_{z_i=1} (z_i D_i - z_i \bar{D})}{n_1}  \nonumber \\
+&=\frac{\bar{y_1} -\bar{y}}{\bar{D_1} -\bar{D}}  \nonumber
+\end{align}
+
+Using the fact that $\bar{y} = \frac{n_1 \bar{y_1}+n_0 \bar{y_0}}{n}$
+\begin{align}
+\rho=\frac{\bar{y_1} -\bar{y_0}}{\bar{D_1} -\bar{D_0}}  \nonumber
+\end{align}
+
+Converges in probability to...
+\begin{align}
+=\frac{E[Y_i|Z_i=1]-E[Y_i|Z_i=0]}{E[D_i|Z_i=1] - E[D_i|Z_i=0]} \nonumber
+\end{align}
+
+
+# Wald Estimate
+
+```{r}
+#$\frac{Cov(Y,Z)}{Var(Z)} / $\frac{Cov(D,Z)}{Var(Z)}$
+(vmat[1,3]/vmat[3,3])/(vmat[2,3]/vmat[3,3])
+
+```
+
+# Variance
+
+- The asymptotic standard error of the Wald estimates is derived from the limiting distribution of $\sqrt{n} \frac{(\bar{y_1} - \bar{y_0})}{(\bar{D_1}-\bar{D_0})}$. 
+- The numerator has a nondegenerate limiting distribution, while $(\bar{D_1}-\bar{D_0})$ converges to a constant. 
+- The standard error is therefore equal to $1/(\bar{D_1}-\bar{D_0})$ times the standard error of the numerator 
+
+
+# Standard Error of Wald Estimate
+```{r}
+#variance of Y1
+var1 = var(d$earnings[d$assignmt==1])/(length(d$earnings[d$assignmt==1]))
+
+#variance of Y0 
+var0 = var(d$earnings[d$assignmt==0])/(length(d$earnings[d$assignmt==0]))
+
+#difference in compliance
+diffcom = mean(d$training[d$assignmt==1]) - mean(d$training[d$assignmt==0])
+
+#variance of wald estimate
+(var1+var0)^0.5/diffcom
+
+```
+
+# Test for first stage
+
+- In contrast to OLS, the IV estimator is not unbiased in small (finite)
+samples even when instrument is perfectly exogenous
+
+- Because of sampling variability in first stage estimation of fitted values,
+some part of the correlation between errors in first and second stage
+seeps into 2SLS estimates (correlation disappears in large samples)
+
+- Finite sample bias can be considerable (e.g., 20 - 30%), even when the
+sample size is over 100,000 if the instrument is weak
+
+
+# Empirical papers typically report first-stage F-statistics
+```{r message=FALSE, warning=FALSE}
+library(lmtest,quietly = T)
+fs1 <- lm_robust(training~ sex + age2225+age2629+age3035+
+                   age3644+age4554+married +assignmt,data=d)
+fs2 <- lm_robust(training~ sex +age2225+age2629+age3035+
+                   age3644+age4554+married,data=d)
+waldtest(fs1, fs2)
+```
+
+# Continuous  IV example
+
+- For our example with IV, we will start with AJR (2001) - Colonial Origins of Comparative Development
+- Treatment is average protection from expropriation
+- Exogenous covariates are dummies for British/French colonial presence
+- Instrument is settler mortality
+- Outcome is log(GDP) in 1995
+                                
+. . .
+
+```{r 6-col-orig-data}
+require(foreign,quietly=TRUE)
+dat <- read.dta("AJR 2001\\maketable5.dta")
+dat <- subset(dat, baseco==1)
+```
+                           
+
+# 2SLS Estimator
+
+- Fit first stage and obtain fitted values $E[D|Z]$
+- Plug into second stage: $Y=\alpha_0 + \alpha_1 E[D|Z] + \epsilon_i$
+- Standard errors incorrect (ignore estimation uncertainty in first stage).
+- Canned packages estimate 2SLS in one step
+
+# Estimate IV via 2SLS
+                                
+```{r 6-est-2sls}
+#first stage
+first <- lm_robust(avexpr~logem4+f_brit+f_french,dat)
+
+#IV
+iv2sls<-iv_robust(logpgp95~avexpr+f_brit+f_french|logem4+f_brit+f_french,dat)
+
+```
+                                
+# Examine First Stage
+```{r 6-show-first}
+summary(first)
+```
+                                
+# Examine Output
+
+```{r 6-show-2sls}
+summary(iv2sls)
+```
+                                
+
+# Final example
+- We're going to be looking at [Ananat
+  (2011)](http://www.aeaweb.org/articles.php?doi=10.1257/app.3.2.34) in AEJ
+- This study looks at the effect of racial segregation on economic outcomes.
+- Outcome: Poverty rate & Inequality (Gini index)
+- Treatment: Segregation (level of dismilarity)
+  - What percentage of blacks (or nonblacks) would have to move to another census tract in order for the proportion black in equal tract to be constant
+  - dism = 1/2 |(blacks in i /blacks total) - (non blacks in i/nonblacks total)|
+- Instrument: "railroad division index"
+  - herf = 1 - ($\sum$ (Area of Neighborhood i)/ (Area Total)  )^2
+- Main covariate of note: railroad length in a town
+
+```{r}
+require(foreign)
+d<-read.dta("Ananat 2011\\aej_maindata.dta")
+```
+
+# Main effects for Black Subsample
+
+```{r 7-iv-setup}
+#OLS
+ols <- lm_robust(lngini_b ~ dism1990 +lenper,d)
+
+#first stage for all areas
+first.stage <- lm_robust(dism1990~herf+lenper,d)
+
+#IV for gini and poverty
+gini.iv <- iv_robust(lngini_b~dism1990+lenper|herf+lenper,d)
+pov.iv <- iv_robust(povrate_b~dism1990+lenper|herf+lenper,d)
+
+```
+
+# Base Results
+```{r 7-1st-st}
+round(summary(ols)$coefficients[2,],3)
+round(summary(first.stage)$coefficients[2,],3)
+round(summary(gini.iv)$coefficients[2,],3)
+round(summary(pov.iv)$coefficients[2,],3)
+```
+
+# Effects for whites
+
+```{r 7-iv-setupb}
+ols.v2 <- lm_robust(lngini_w~dism1990+lenper,d)
+
+first.stage.v2 <- lm_robust(dism1990~herf+lenper,d)
+
+gini.iv.v2 <- iv_robust(lngini_w~dism1990+lenper|herf+lenper,d)
+
+pov.iv.v2 <- iv_robust(povrate_w~dism1990+lenper|herf+lenper,d)
+```
+
+# Base Results for White Subsample
+```{r 7-1st-stb}
+round(summary(ols.v2)$coefficients[2,],3)
+
+round(summary(first.stage.v2)$coefficients[2,],3)
+
+round(summary(gini.iv.v2)$coefficients[2,],3)
+
+round(summary(pov.iv.v2)$coefficients[2,],3)
+```

@@ -1,0 +1,466 @@
+---
+title: 'Lab 8: Regression Mechanics'
+author: "Sidak Yntiso sgy210@nyu.edu"
+date: "March 30, 2020"
+output:
+  beamer_presentation:
+  incremental: true
+---
+# Regression mechanics
+Gauss Markov assumptions
+
+- Linearity in parameters
+- Full rank regression matrix (variation in $X$)
+- Zero conditional mean of the errors ($\mathbb{E}[\epsilon_i | X] = 0$)
+
+. . .
+
+- Conditional independence of errors ($Cov(\epsilon_i, \epsilon_j | X) = 0$)
+- Homoskedasticity of the errors ($Var(\epsilon_i | X) = \sigma^2$)
+
+. . .
+
+Effect hetereogeneity in multiple regression
+
+- illustration of effective samples
+
+# Linearity in parameters
+
+```{r fig.show='hide'}
+rm(list=ls())
+N <- 1000; set.seed(123)
+X <- rnorm(N,2); Y <- X^2 + rnorm(N)
+plot(	X,Y, pch=19, cex=.5,col="gray",
+      main="Linearity (in parameters) depends 
+      on the regression specification")
+p <- recordPlot()
+```
+
+# Plot Data
+```{r fig.cap='', fig.height=5, fig.width=10}
+p
+```
+
+# CEF not linear in parameters for this specification
+```{r}
+fit1 <- lm(Y~X)
+```
+. . .
+
+```{r fig.show='hide'}
+p; points(	X,predict(fit1), type="l", col="red", lwd=2)
+text(	5,13, expression(X[1]*beta[1]), col="red")
+round(mean(residuals(fit1)*X),5) # Orthogonality
+p <- recordPlot()
+```
+
+# Plot Data
+```{r fig.cap='', fig.height=5, fig.width=10}
+p
+```
+
+# Implies non-zero conditional mean of residual over X
+```{r warning=FALSE}
+X.example <- (abs(X-4.05))==min(abs(X-4.05))
+resid.example <- mean(residuals(fit1)[X>=4&X<=4.1])
+y1 = mean(residuals(fit1)[X>=4&X<=4.1])+
+  predict(fit1)[X.example]
+```
+. . .
+
+```{r fig.show='hide'}
+p; segments(X[X.example], predict(fit1)[X.example],
+          X[X.example], y1, col="red",lwd=2)
+text(4.3, predict(fit1)[X.example]+2, 
+      round(resid.example,2), col="red", cex=.5)
+p <- recordPlot()
+```
+
+# Plot Data
+```{r fig.cap='', fig.height=5, fig.width=10}
+p
+```
+
+# CEF linear in parameters for this specification
+```{r}
+fit2 <- lm(Y~X+I(X^2))
+X.ord <- X[order(X)]
+Y.ord <- predict(fit2)[order(X)]
+```
+. . .
+
+```{r fig.show='hide'}
+p; points(	X.ord, Y.ord, type="l", col="blue", lwd=2)
+text(	4, 23, expression(X[2]*beta[2]), col="blue")
+p <- recordPlot()
+round(mean(residuals(fit2)*X),5) # Orthogonality
+```
+
+# Plot Data
+```{r fig.cap='', fig.height=5, fig.width=10}
+p
+```
+
+# The intercept 
+- The `lm()`, `lm_robust()` functions by default include an intercept. Why?
+
+. . .
+
+- In textbooks, zero conditional mean of the errors often coupled with zero expectation of error assumption: $\mathbb{E}[\epsilon_i]  = 0$
+- The latter can always be assumed to be zero in the linear regression model so long as the intercept is included in the model. 
+- Let's illustrate by removing the intercept using the -1 syntax
+
+# Illustration 
+```{r}
+fit3 <- lm(Y~-1+X+I(X^2))
+```
+. . .
+
+```{r fig.show='hide'}
+r3 <- round(mean(residuals(fit3)),3)
+r2 <- round(mean(residuals(fit2)),3)
+plot(X,Y, pch=19, cex=.5,col="gray")
+points(	X,predict(fit3), type="p", col="red", lwd=2)
+text(2,13, paste(expression(E[ei]),"=",r3), col="red")
+points(	X,predict(fit2), type="p", col="blue", lwd=2)
+text(2,17, paste(expression(E[ei]),"=",r2), col="blue")
+p <- recordPlot()
+```
+
+# Plot Data
+```{r fig.cap='', fig.height=5, fig.width=10}
+p
+```
+
+
+# Homoskedasticity example
+```{r fig.show='hide'}
+rm(list=ls())
+set.seed(12345); N <- 1000
+X <- c(rep(1,N/2), rep(0,N/2)); P <- .2 + .3*X
+Z <- rbinom(N,1, P) # Let Z = P(X) + u, but Z=0,1.
+plot(jitter(X), jitter(Z),pch=19,cex=.5,axes=F,
+      xlab="X",ylab="Z", main="The CEF is linear, 
+      but there is heteroskedasticity",
+      col="gray",ylim=c(-.4,1.25))
+axis(1, c(0,1)); axis(2, c(0,1)); box()
+p <- recordPlot()
+```
+# Illustration
+```{r fig.cap='', fig.height=5, fig.width=10}
+p
+```
+
+# Differences in variances
+```{r}
+fit <- lm(Z~X)
+v0 <- var(residuals(fit)[X==0]); 
+v1 <- var(residuals(fit)[X==1])
+print(v0); print(v1)
+
+fit2 <- estimatr::lm_robust(Z~X)
+v20 <- var(Z-predict(fit2)[X==0]); 
+v21 <- var(Z-predict(fit2)[X==1])
+print(v20); print(v21)
+```
+
+# Plot difference
+```{r fig.show='hide'}
+p; points(X, predict(fit), pch=19, col="red", 
+          type="b", cex=.5)
+segments(0,mean(predict(fit)[X==0])+1.96*sqrt(v0/50),
+          0,mean(predict(fit)[X==0])-1.96*sqrt(v0/50),
+          col="black")
+segments(1,mean(predict(fit)[X==1])+1.96*sqrt(v1/50),
+          1,mean(predict(fit)[X==1])-1.96*sqrt(v1/50),
+          col="black")
+segments(0.02,mean(predict(fit2)[X==0])+1.96*sqrt(v20/50),
+          0.02,mean(predict(fit2)[X==0])-1.96*sqrt(v20/50),
+          col="red")
+segments(0.98,mean(predict(fit2)[X==1])+1.96*sqrt(v21/50),
+          0.98,mean(predict(fit2)[X==1])-1.96*sqrt(v21/50),
+          col="red")
+legend(-.25,-.15, legend="Expected 95% CI width",
+       lty="solid", bty="n", cex=.7)
+p <- recordPlot()
+```
+# Illustration
+```{r fig.cap='', fig.height=5, fig.width=10}
+p
+```
+
+
+# What if we have heterogenous treatment effects?
+- Recall the ATE is a weighted sum of conditional ATEs:
+- $ATE = \sum_x \tau_x Pr[X_i = x];$ where $\tau_x= E[Y_i(1) - Y_i(0)|X_i = x]$
+- Similar derivation for the $ATT = \sum_x \tau_x Pr[X_i = x|D_i=1];$
+
+. . .
+
+- Using Bayes rule $Pr[X_i = x|D_i = 1] = \frac{Pr[D_i = 1|X_i=x] Pr[X_i=x]}{\sum_x Pr[D_i = 1|X_i=x] Pr[X_i=x]}$
+- Which means that the ATT is a propensity-score weighted function of the CATEs: $ATT = \frac{\sum_x \tau_x  Pr[D_i = 1|X_i=x] Pr[X_i=x]}{\sum_x Pr[D_i = 1|X_i=x] Pr[X_i=x]}$
+
+# OLS also weighted average of CATEs but use different weights
+\begin{align}
+Y_i &= \sum_x D_{xi}\alpha_x + \tau_R D_i + e_i \nonumber  \\
+\tau_R &= \frac{Cov (Y_i, \tilde{D}_i)}{V(\tilde{D}_i)}  \nonumber
+\end{align}
+where $\tilde{D}_i$ is residual from regression: $D_i = \sum_x D_{xi}\beta_x + \tilde{D}_i$
+
+. . .
+
+
+\begin{align}
+\tau_R &= \frac{Cov(E[Y_i|X_i, D_i], D_i - E[D_i|X_i])}{V(D_i - E[D_i|X_i])} \nonumber  \\
+&=\frac{E[E[Y_i|X_i, D_i](D_i - E[D_i|X_i])]}{E[(D_i - E[D_i|X_i])^2]} \nonumber
+\end{align}
+
+# Simplify the CEF
+\begin{align}
+E[Y_i|X_i, D_i] &= E[D_iY_i(1) + (1-D_i)Y_i(0)|X_i, D_i] \nonumber \\
+&= E[Y_i(0)|X_i, D_i = 0] + D_iE[Y_i(1) - Y_i(0)|X_i, D_i] \nonumber\\
+&= E[Y_i|X_i, D_i = 0] + \tau(X_i)D_i \nonumber
+\end{align}
+
+. . .
+
+Substitute $E[Y_i|X_i, D_i]$:
+\begin{align}
+\tau_R &=\frac{E[E[Y_i|X_i, D_i](D_i - E[D_i|X_i])]}{E[(D_i - E[D_i|X_i])^2]} \nonumber \\
+ &=\frac{E[\tau(X_i)D_i (D_i - E[D_i|X_i])]}{E[(D_i - E[D_i|X_i])^2]} \nonumber \\
+ &=\frac{E[\tau(X_i)(D_i^2 - D_i E[D_i|X_i])]}{E[(D_i - E[D_i|X_i])^2]} \nonumber
+\end{align}
+
+# Putting it altogether
+\begin{align}
+E[D_i^2 - D_i E[D_i|X_i]] &= E[(D_i|X_i=x)^2] - (E[D_i|X_i=x])^2 \nonumber \\
+&= Var(D_i|X_i =x) \nonumber \\
+&= \Pr[D_i = 1|X_i](1 - \Pr[D_i = 1|X_i]) \nonumber
+\end{align}
+
+. . .
+
+\begin{align}
+\tau_R &= \frac{\sum_x \tau_x[\Pr[D_i = 1|X_i = x](\color{red} 1-\Pr[D_i = 1|X_i = x] \color{black})]\Pr[X_i = x]}{\sum_x [\Pr[D_i = 1|X_i = x](\color{red} 1-\Pr[D_i = 1|X_i = x] \color{black})]\Pr[X_i = x]}  \nonumber
+\end{align}
+
+# Implications
+Both weighted averages of CATEs:
+
+- ATT aggregrates via population weighting
+- OLS aggregrates via conditional variance weighting wrt $D_i$
+
+. . .
+
+OLS produces ATT if
+
+- constant treatment effects $\tau_x = \tau$ for all X or
+- unconditional independence 
+
+. . .
+
+Variance weighting is biased - it privileges $X_i$ for which $\tau_x$ estimates are precise
+
+- $Pr[D_i = 1|X_i = x](1-\Pr[D_i = 1|X_i = x])$ is maximized when $Pr[D_i = 1|X_i = x]=1/2$
+- Regression weights produce an effective sample different from the observed sample
+
+
+
+
+# Effective Samples
+- Let's check the properties of your effective sample in regression.
+- The key result is: $\hat{\rho}_{reg}\,{\buildrel p \over \to}\,\frac{E[w_i \rho_i]}{E[w_i]}$
+  - where $w_i = (D_i - E[D_i|X_i])^2$
+
+. . .
+
+- We estimate these weights with: $\hat{w}_i = \hat{D}_i^2$ 
+  - where $D_i^2$ is the $i$th squared residual.
+  - Because these estimates are "bad" for each unit, using them to reweight the sample is a bad idea.
+
+
+# Example paper
+How do people translate personal experiences into political attitudes? 
+
+- non-random assignment of social and economic phenomena
+- [Egan and Mullin 2013](https://www.journals.uchicago.edu/doi/abs/10.1017/S0022381612000448) focus on local weather shocks
+
+The variables of interest are:
+
+- `ddt_week_direction` - Treatment variable (1 if the normal local temperature (in Fahrenheit) in week prior to survey $>$ local average; 0 otherwise)
+- `getwarmord` - Opinion on whether there is "solid evidence" for global warming i.e., the earth getting warmer (no = 1, mixed/some/don't know = 2, yes = 3). 
+
+
+
+# Load in data
+```{r 3-load-data}
+d <- haven::read_dta("gwdataset.dta")
+zips <- haven::read_dta("zipcodetostate.dta")
+zips<-unique(zips[,c("statenum","statefromzipfile")])
+pops <- read.csv("population_ests_2013.csv")
+pops$state <- tolower(pops$NAME)
+d$getwarmord <- as.double(d$getwarmord)
+d$treatment <- as.double(d$ddt_week >0 )
+model = "educ_hsless+educ_coll+educ_postgrad+educ_dk+
+  party_rep+party_leanrep+party_leandem+party_dem+
+  male+raceeth_black+raceeth_hisp+raceeth_notwbh+
+  raceeth_dkref+age_1824+age_2534+age_3544+age_5564+
+  age_65plus+age_dk+as.factor(statenum)"
+```
+
+# Base Model
+
+- We won't worry about standard errors yet.
+
+
+
+```{r 3-show-model}
+# And estimate primary model of interest:
+
+out<-lm(paste("getwarmord ~ treatment+",model,sep=""),d)
+summary(out)$coefficients[1:8,]
+```
+
+# Estimate D^2
+
+- We can simply square the residuals of a partial regression to get $D^2$:
+
+
+
+```{r 3-get-d2}
+
+outD<-lm(paste("treatment ~",model,sep=""),d)
+D2 <- residuals(outD)^2
+```
+
+# Effective Sample Statistics
+- We can use these estimated weights for examining the sample.
+
+
+
+```{r 3-d2-eff-sample}
+compare_samples<- d[,c("wave","treatment","raceeth_black",
+                       "raceeth_hisp","party_rep",
+                       "age_1824","educ_hsless")]
+compare_samples <- apply(compare_samples,2,function(x)
+  round(c(mean(x),sd(x),weighted.mean(x,D2),
+    sqrt(weighted.mean((x-weighted.mean(x,D2))^2,D2))),3) )
+compare_samples <- t(compare_samples)
+colnames(compare_samples) <- c("Nominal Mean"," SD",
+                               "Effective Mean", "SD")
+```
+
+# Comparisons
+```{r 3-d2-eff-sample-example}
+compare_samples
+```
+
+# Effective Sample Maps
+
+- Where in the US does the effective sample emphasize?
+
+```{r 3-setup-data-for-maps}
+# Effective sample by state
+wt.by.state <- tapply(D2,d$statenum,sum)
+wt.by.state <- wt.by.state/sum(wt.by.state)*100
+wt.by.state <- cbind(D2=wt.by.state,
+                     statenum=names(wt.by.state))
+data_for_map <- merge(wt.by.state,zips,by="statenum")
+# Nominal Sample by state
+wt.by.state <- tapply(rep(1,6726),d$statenum,sum)
+wt.by.state <- wt.by.state/sum(wt.by.state)*100
+wt.by.state <- cbind(Nom=wt.by.state,
+                     statenum=names(wt.by.state))
+data_for_map <- merge(data_for_map,wt.by.state,by="statenum")
+```
+
+
+# Set up data
+```{r 3-setup-data-for-maps2}
+data(state.fips, package = "maps") #load maps
+#merge maps with data
+data_for_map <- merge(state.fips,data_for_map,by.x="abb",
+                      by.y="statefromzipfile")
+#convert factor columns into numeric 
+data_for_map$D2<-as.double(as.character(data_for_map$D2))
+data_for_map$Nom<-as.double(as.character(data_for_map$Nom))
+#recode state names
+data_for_map$state <- sapply(
+  as.character(data_for_map$polyname),function(x) 
+    strsplit(x,":")[[1]][1])
+#merge populations with data
+data_for_map <- merge(data_for_map,pops,by="state")
+```
+
+# Set up data cntd
+```{r 3-setup-data-for-maps3}
+#Difference in weights
+data_for_map$Diff <- 
+  data_for_map$D2 - data_for_map$Nom
+data_for_map$PopPct <- data_for_map$POPESTIMATE2013/
+  sum(data_for_map$POPESTIMATE2013)*100
+data_for_map$PopDiffEff <- 
+  data_for_map$D2 - data_for_map$PopPct
+data_for_map$PopDiffNom <- 
+  data_for_map$Nom - data_for_map$PopPct
+data_for_map$PopDiff <- 
+  data_for_map$PopDiffEff - data_for_map$PopDiffNom
+require(ggplot2,quietly=TRUE) #plotting package
+state_map <- map_data("state")
+```
+
+# More setup
+```{r 3-make-plots-raw}
+plotbase <- ggplot(data_for_map,aes(map_id=state))+
+  expand_limits(x = state_map$long,y = state_map$lat)+
+  scale_fill_gradient2("% Weight",low = "red", 
+                       mid = "white", high = "black")
+
+plotEff <- plotbase+geom_map(aes(fill=D2),map=state_map)+
+  labs(title = "Effective Sample")
+
+plotNom <- plotbase+geom_map(aes(fill=Nom),map=state_map)+ 
+  labs(title = "Nominal Sample")
+
+plotDiff <- plotbase+geom_map(aes(fill=Diff),map=state_map)+ 
+  labs(title = "Effective Weight Minus Nominal Weight")
+```
+
+# And the maps
+
+```{r 3-raw-maps, fig.cap='',fig.height=5,fig.width=12}
+require(gridExtra,quietly=TRUE)
+grid.arrange(plotNom,plotEff,ncol=2)
+```
+
+# Difference in Weights
+
+```{r 3-show-diff,fig.cap='',fig.height=3,fig.width=5}
+plotDiff
+```
+
+# Population Comparison
+```{r 3-make-pop-comps}
+plotEff <- plotbase+
+  geom_map(aes(fill=PopDiffEff),map=state_map)+ 
+  labs(title = "Effective Sample")
+
+plotNom <- plotbase + 
+  geom_map(aes(fill=PopDiffNom),map = state_map)+ 
+  labs(title = "Nominal Sample")
+
+plotDiff <- plotbase + 
+  geom_map(aes(fill=PopDiff),map = state_map)+ 
+  labs(title = "Effective Weight Minus Nominal Weight")
+```
+
+# Population Comparison Plots
+```{r 3-show-pop-comps, fig.cap='',fig.height=5,fig.width=12}
+grid.arrange(plotNom,plotEff,ncol=2)
+```
+
+# Plot Difference
+
+```{r 3-plot-pop-diff,fig.cap='',fig.height=3,fig.width=5}
+plotDiff
+```
