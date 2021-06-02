@@ -43,8 +43,8 @@ h2 {
   font-variant-caps: small-caps;
 }  
 .collapsible {
-  background-color: #white;
-  color: #444;
+  background-color: white;
+  color: #111;
   cursor: pointer;
   padding: 18px;
   width: 100%;
@@ -55,7 +55,7 @@ h2 {
 }
 
 .active, .collapsible:hover {
-  background-color: #white;
+  background-color: white;
 }
 
 .content {
@@ -63,9 +63,8 @@ h2 {
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.2s ease-out;
-  background-color: #white;
+  background-color: white;
 }
-
 </style>
 
 </head>
@@ -112,9 +111,8 @@ h2 {
 
 <h2> <p id="small-caps"> Publications </p> </h2>
 
-<p><a href="Papers/appeals.pdf">Judicial Accountability and Racial Disparity in Criminal Appeals</a> with <a href="https://wp.nyu.edu/annaharvey/">Anna Harvey</a></p>
-<p><em>Forthcoming, Journal of Legal Studies.</em></p> 
-<button class="collapsible">Abstract</button>
+<a href="Papers/appeals.pdf">Judicial Accountability and Racial Disparity in Criminal Appeals</a> with <a href="https://wp.nyu.edu/annaharvey/">Anna Harvey.</a> <em>Forthcoming, Journal of Legal Studies.</em>
+<button class="collapsible">Abstract [+]</button>
 <div class="content">
 <div class="grid-65"></div><article class="paper"><div class="grid-35"><a class=whaddup href="Papers/appeals/">
 <img src="Papers/appeals.png" style="background-size: contain;" /></a></div><article class="paper">
@@ -199,6 +197,24 @@ h2 {
 </div>
 <article class="paper"><div class="grid-35"><a class=whaddup href="Papers/bridging/">
 <img src="Papers/bridging.png" style="background-size: contain;" /></a></div>
+
+
+<script>
+var coll = document.getElementsByClassName("collapsible");
+var i;
+
+for (i = 0; i < coll.length; i++) {
+  coll[i].addEventListener("click", function() {
+    this.classList.toggle("active");
+    var content = this.nextElementSibling;
+    if (content.style.maxHeight){
+      content.style.maxHeight = null;
+    } else {
+      content.style.maxHeight = content.scrollHeight + "px";
+    } 
+  });
+}
+</script>
 
 </div></article>
 </div><!-- .entry-content -->
