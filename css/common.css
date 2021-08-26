@@ -48,7 +48,7 @@ h1 a, h2 a, h3 a, h4 a, h5 a, h6 a { color: inherit; }
 			#navigation a.active { color: #000000; }
 			.resize #navigation a { height: 30px; line-height: 30px; font-size: 0.9em; }
 			
-		#header { padding: 45px 0 0; height: 380px; text-align: center; }
+		#header { padding: 5px 0 0; height: 190px; text-align: center; }
 		.resize  #header { padding: 10px 0; height: 125px; font-size: 0.8em; }
 			#header .image { display: inline-block; margin: 0 0 35px; width: 170px; height: 170px; border-radius: 85px;  }
 			.resize #header .image { width: 0px; height: 0px; margin-bottom: 0px; }
