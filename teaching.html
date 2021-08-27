@@ -99,7 +99,7 @@ ul {
 <div class="page-content">
 	<div id="main" class="content">
 
-<h2>Teaching Assistant at New York University</h2>
+<h2 id="small-caps">Teaching Assistant at New York University</h2>
 
 <h4>1. Power and Politics in America with Sanford Gordon</a> (Spring 2021) <a href="teaching/POL_UA_300_SP2021_mk1.pdf", style="color:#800000"> [Syllabus] </a></h4>
 
@@ -144,12 +144,43 @@ ul {
 
 <h4>6. Introduction to Comparative Politics with Joshua Tucker </a> (Fall 2018)</h4>
 
-<h2>Teaching Assistant at New York University Abu Dhabi</h2>
+<div class="grid-100">
+<hr> 
+<h2><p id="small-caps">Teaching Assistant at New York University Abu Dhabi</p></h2>
 
 <h4>1. Economic Development with Robert Buckley (Winter 2015) and Yaw Nyarko (Spring 2015)</h4>
 <h4>2. Principles of Microeconomics with Nikos Nikiforakis (Summer 2015), Lucas Siga (Spring 2015) and Christopher Paik (Fall 2014).</h4>
+<br>
+
+<script>
+var coll = document.getElementsByClassName("collapsible");
+var i;
+
+for (i = 0; i < coll.length; i++) {
+  coll[i].addEventListener("click", function() {
+    this.classList.toggle("active");
+    var content = this.nextElementSibling;
+    if (content.style.maxHeight){
+      content.style.maxHeight = null;
+    } else {
+      content.style.maxHeight = content.scrollHeight + "px";
+    } 
+  });
+}
+</script>
+
+</div></article>
+</div><!-- .entry-content -->
+</div><!-- .inside-article -->
+</article><!-- #post-## -->
+
+				
+</main><!-- #main -->
+</div><!-- #primary -->
+
+</div><!-- #content -->
+</div><!-- #page -->
 
 </body>
 </html>
 
-  
